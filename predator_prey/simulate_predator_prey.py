@@ -46,8 +46,11 @@ def sim():
             landscape[row]=[0]+[int(i) for i in values]+[0]
             row += 1
 
+#def land_only_number():
     number_of_land_only=np.count_nonzero(landscape)
     print("Number of land-only squares: {}".format(number_of_land_only))
+#    return number_of_land_only
+
 
     # Pre-calculate number of land neighbours of each land square.
     neibs=np.zeros((height_halo,width_halo),int)
@@ -57,29 +60,10 @@ def sim():
                 + landscape[x+1,y] \
                 + landscape[x,y-1] \
                 + landscape[x,y+1]
-    
-	hs=landscape.astype(float).copy() # density of hares in the landscape
-    ps=landscape.astype(float).copy() #density of pumas in the landscape
-    random.seed(hare_seed)
-    for x in range(1,height+1):
-        for y in range(1,width+1):
-            if hare_seed==0:
-                hs[x,y]=0
-            else:
-                if landscape[x,y]:
-                    hs[x,y]=random.uniform(0,5.0)
-                else:
-                    hs[x,y]=0
-    random.seed(puma_seed)
-    for x in range(1,height+1):
-        for y in range(1,width+1):
-            if puma_seed==0:
-                ps[x,y]=0
-            else:
-                if landscape[x,y]:
-                    ps[x,y]=random.uniform(0,5.0)
-                else:
-                    ps[x,y]=0
+
+    hs = density_generator(landscape, hare_seed, width, height)
+    ps = density_generator(landscape, puma_seed, width, height)
+
 
     # Create copies of initial maps and arrays for PPM file maps.
     # Reuse these so we don't need to create new arrays going round the simulation loop.
@@ -87,12 +71,10 @@ def sim():
     ps_nu=ps.copy() #should be put at hte end
     hcols=np.zeros((height,width),int) # wrong place, the below is the same
     pcols=np.zeros((height,width),int) # clour matrix
-    if number_of_land_only != 0:
-        ah=np.sum(hs)/number_of_land_only  #average of hares
-        ap=np.sum(ps)/number_of_land_only  #average of pumas
-    else:
-        ah=0
-        ap=0
+    
+
+    ah = average_of_density(hs, number_of_land_only)
+    ap = average_of_density(ps, number_of_land_only)
     print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(0,0,ah,ap))
     with open("averages.csv","w") as f:
         hdr="Timestep,Time,Hares,Pumas\n"
@@ -146,12 +128,35 @@ def sim():
                     if ps_nu[x,y]<0:
                         ps_nu[x,y]=0
         # Swap arrays for next iteration.
-        tmp=hs
-        hs=hs_nu
-        hs_nu=tmp
-        tmp=ps
-        ps=ps_nu
-        ps_nu=tmp
+        hs, hs_nu = swap_arrays(hs, hs_nu)
+        ps, ps_nu = swap_arrays(ps, ps_nu)
+
+
+
+def density_generator(landscape, seed, width, height):
+    generated_density = landscape.astype(float).copy() # density of hares in the landscape
+    random.seed(seed)
+    for x in range(1,height+1):
+        for y in range(1,width+1):
+            if seed==0:
+                generated_density[x,y]=0
+            else:
+                if landscape[x,y]:
+                    generated_density[x,y]=random.uniform(0,5.0)
+                else:
+                    generated_density[x,y]=0
+    return generated_density
+
+def average_of_density(density, number_of_land_only):
+    if number_of_land_only != 0:
+        avarage = np.sum(density)/number_of_land_only  #calculate the average of dendity
+    else:
+        avarage = 0
+    return avarage
+
+
+def swap_arrays(array1, array2):
+    return array2,array1
 
 if __name__ == "__main__":
     sim()
