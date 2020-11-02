@@ -79,10 +79,11 @@ def sim():
     hare_densities = density_generator(landscape, hare_seed, width, height)
     puma_densities = density_generator(landscape, puma_seed, width, height)
 
-    ah = average_of_density(hare_densities, number_of_land_only)
-    ap = average_of_density(puma_densities, number_of_land_only)
+    average_of_hares = average_of_density(hare_densities, number_of_land_only)
+    average_of_pumas = average_of_density(puma_densities, number_of_land_only)
 
-    print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(0,0,ah,ap))
+    print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(0,0,average_of_hares,average_of_pumas))
+
     with open("averages.csv","w") as f:
         hdr="Timestep,Time,Hares,Pumas\n"
         f.write(hdr)
@@ -96,20 +97,20 @@ def sim():
     pcols=np.zeros((height,width),int) # clour matrix
     
 
-    tot_ts = int(duration / delta_t) # total_time_steps
-    for i in range(0,tot_ts):
+    total_time_steps = int(duration / delta_t) # total_time_steps
+    for i in range(0,total_time_steps):
         if not i%time_step:
             mh=np.max(hare_densities)
             mp=np.max(puma_densities)
             if number_of_land_only != 0:
-                ah=np.sum(hare_densities)/number_of_land_only
-                ap=np.sum(puma_densities)/number_of_land_only
+                average_of_hares=np.sum(hare_densities)/number_of_land_only
+                average_of_pumas=np.sum(puma_densities)/number_of_land_only
             else:
-                ah=0
-                ap=0
-            print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(i,i*delta_t,ah,ap))
+                average_of_hares=0
+                average_of_pumas=0
+            print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(i,i*delta_t,average_of_hares,average_of_pumas))
             with open("averages.csv".format(i),"a") as f:
-                f.write("{},{},{},{}\n".format(i,i*delta_t,ah,ap))
+                f.write("{},{},{},{}\n".format(i,i*delta_t,average_of_hares,average_of_pumas))
 
             for x in range(1,height+1):
                 for y in range(1,width+1):

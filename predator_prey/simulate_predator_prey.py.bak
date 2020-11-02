@@ -76,13 +76,14 @@ def sim():
     # Pre-calculate number of land neighbours of each land square.
     neibs = num_of_land_neighbours(height_halo,width_halo,height,width,landscape)
 
-    hare densities = density_generator(landscape, hare_seed, width, height)
-    puma densities = density_generator(landscape, puma_seed, width, height)
+    hare_densities = density_generator(landscape, hare_seed, width, height)
+    puma_densities = density_generator(landscape, puma_seed, width, height)
 
-    ah = average_of_density(hare densities, number_of_land_only)
-    ap = average_of_density(puma densities, number_of_land_only)
+    average_of_hares = average_of_density(hare_densities, number_of_land_only)
+    average_of_pumas = average_of_density(puma_densities, number_of_land_only)
 
-    print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(0,0,ah,ap))
+    print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(0,0,average_of_hares,average_of_pumas))
+
     with open("averages.csv","w") as f:
         hdr="Timestep,Time,Hares,Pumas\n"
         f.write(hdr)
@@ -90,36 +91,36 @@ def sim():
 
     # Create copies of initial maps and arrays for PPM file maps.
     # Reuse these so we don't need to create new arrays going round the simulation loop.
-    hs_nu=hare densities.copy() 
-    ps_nu=puma densities.copy() 
+    hs_nu=hare_densities.copy() 
+    ps_nu=puma_densities.copy() 
     hcols=np.zeros((height,width),int) 
     pcols=np.zeros((height,width),int) # clour matrix
     
 
-    tot_ts = int(duration / delta_t) # total_time_steps
+    tot_ts = int(duration / delta_t) # total_timesteps
     for i in range(0,tot_ts):
         if not i%time_step:
-            mh=np.max(hare densities)
-            mp=np.max(puma densities)
+            mh=np.max(hare_densities)
+            mp=np.max(puma_densities)
             if number_of_land_only != 0:
-                ah=np.sum(hare densities)/number_of_land_only
-                ap=np.sum(puma densities)/number_of_land_only
+                average_of_hares=np.sum(hare_densities)/number_of_land_only
+                average_of_pumas=np.sum(puma_densities)/number_of_land_only
             else:
-                ah=0
-                ap=0
-            print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(i,i*delta_t,ah,ap))
+                average_of_hares=0
+                average_of_pumas=0
+            print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(i,i*delta_t,average_of_hares,average_of_pumas))
             with open("averages.csv".format(i),"a") as f:
-                f.write("{},{},{},{}\n".format(i,i*delta_t,ah,ap))
+                f.write("{},{},{},{}\n".format(i,i*delta_t,average_of_hares,average_of_pumas))
 
             for x in range(1,height+1):
                 for y in range(1,width+1):
                     if landscape[x,y]:
                         if mh != 0:
-                            hcol=(hare densities[x,y]/mh)*255  #color of hares 
+                            hcol=(hare_densities[x,y]/mh)*255  #color of hares 
                         else:
                             hcol = 0
                         if mp != 0:
-                            pcol=(puma densities[x,y]/mp)*255 #color of pumas
+                            pcol=(puma_densities[x,y]/mp)*255 #color of pumas
                         else:
                             pcol = 0
                         hcols[x-1,y-1]=hcol
@@ -136,15 +137,15 @@ def sim():
         for x in range(1,height+1):
             for y in range(1,width+1):
                 if landscape[x,y]:
-                    hs_nu[x,y]=hare densities[x,y]+delta_t*((birth_hares*hare densities[x,y])-(death_hares*hare densities[x,y]*puma densities[x,y])+diffusion_hares*((hare densities[x-1,y]+hare densities[x+1,y]+hare densities[x,y-1]+hare densities[x,y+1])-(neibs[x,y]*hare densities[x,y])))
+                    hs_nu[x,y]=hare_densities[x,y]+delta_t*((birth_hares*hare_densities[x,y])-(death_hares*hare_densities[x,y]*puma_densities[x,y])+diffusion_hares*((hare_densities[x-1,y]+hare_densities[x+1,y]+hare_densities[x,y-1]+hare_densities[x,y+1])-(neibs[x,y]*hare_densities[x,y])))
                     if hs_nu[x,y]<0:
                         hs_nu[x,y]=0
-                    ps_nu[x,y]=puma densities[x,y]+delta_t*((birth_pumas*hare densities[x,y]*puma densities[x,y])-(death_pumas*puma densities[x,y])+diffusion_pumas*((puma densities[x-1,y]+puma densities[x+1,y]+puma densities[x,y-1]+puma densities[x,y+1])-(neibs[x,y]*puma densities[x,y])))
+                    ps_nu[x,y]=puma_densities[x,y]+delta_t*((birth_pumas*hare_densities[x,y]*puma_densities[x,y])-(death_pumas*puma_densities[x,y])+diffusion_pumas*((puma_densities[x-1,y]+puma_densities[x+1,y]+puma_densities[x,y-1]+puma_densities[x,y+1])-(neibs[x,y]*puma_densities[x,y])))
                     if ps_nu[x,y]<0:
                         ps_nu[x,y]=0
         # Swap arrays for next iteration.
-        hare densities, hs_nu = swap_arrays(hare densities, hs_nu)
-        puma densities, ps_nu = swap_arrays(puma densities, ps_nu)
+        hare_densities, hs_nu = swap_arrays(hare_densities, hs_nu)
+        puma_densities, ps_nu = swap_arrays(puma_densities, ps_nu)
 
 
 
