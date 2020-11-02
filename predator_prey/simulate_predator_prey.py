@@ -97,11 +97,11 @@ def sim():
     pcols=np.zeros((height,width),int) # clour matrix
     
 
-    total_time_steps = int(duration / delta_t) # total_time_steps
+    total_time_steps = int(duration / delta_t)
     for i in range(0,total_time_steps):
         if not i%time_step:
-            mh=np.max(hare_densities)
-            mp=np.max(puma_densities)
+            max_hare_density=np.max(hare_densities)
+            max_puma_density=np.max(puma_densities)
             if number_of_land_only != 0:
                 average_of_hares=np.sum(hare_densities)/number_of_land_only
                 average_of_pumas=np.sum(puma_densities)/number_of_land_only
@@ -115,12 +115,12 @@ def sim():
             for x in range(1,height+1):
                 for y in range(1,width+1):
                     if landscape[x,y]:
-                        if mh != 0:
-                            hcol=(hare_densities[x,y]/mh)*255  #color of hares 
+                        if max_hare_density != 0:
+                            hcol=(hare_densities[x,y]/max_hare_density)*255  #color of hares 
                         else:
                             hcol = 0
-                        if mp != 0:
-                            pcol=(puma_densities[x,y]/mp)*255 #color of pumas
+                        if max_puma_density != 0:
+                            pcol=(puma_densities[x,y]/max_puma_density)*255 #color of pumas
                         else:
                             pcol = 0
                         hcols[x-1,y-1]=hcol

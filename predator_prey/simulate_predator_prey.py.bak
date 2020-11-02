@@ -97,8 +97,8 @@ def sim():
     pcols=np.zeros((height,width),int) # clour matrix
     
 
-    tot_ts = int(duration / delta_t) # total_timesteps
-    for i in range(0,tot_ts):
+    total_time_steps = int(duration / delta_t)
+    for i in range(0,total_time_steps):
         if not i%time_step:
             mh=np.max(hare_densities)
             mp=np.max(puma_densities)
