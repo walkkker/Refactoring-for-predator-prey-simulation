@@ -3,6 +3,7 @@ import numpy as np
 import random
 import time
 
+
 def args_parser():
     parser=ArgumentParser()
     parser.add_argument("-r","--birth-hares",type=float,default=0.08,help="Birth rate of hares")
@@ -21,6 +22,7 @@ def args_parser():
     args=parser.parse_args()
     return args
 
+
 def landscape_generator(landscape_file):
     with open(landscape_file,"r") as f:
         width,height=[int(i) for i in f.readline().split(" ")]
@@ -36,12 +38,15 @@ def landscape_generator(landscape_file):
             row += 1
     return width, height, width_halo, height_halo, landscape
 
+
 def count_land_only(landscape):
     number_of_land_only=np.count_nonzero(landscape)
     print("Number of land-only squares: {}".format(number_of_land_only))
     return number_of_land_only
 
-def num_of_land_neighbours(height_halo,width_halo,height,width,landscape):    
+
+def num_of_land_neighbours(height_halo,width_halo,height,width,landscape):
+    # Calculate number of land neighbours of each land square.
     land_neighbours=np.zeros((height_halo,width_halo),int)
     for x in range(1,height+1):
         for y in range(1,width+1):
@@ -50,6 +55,15 @@ def num_of_land_neighbours(height_halo,width_halo,height,width,landscape):
                 + landscape[x,y-1] \
                 + landscape[x,y+1]
     return land_neighbours
+
+
+def single_color_point(max_density, densities, x, y):
+    if max_density != 0:
+        col=(densities[x,y]/max_density)*255  #color of hares 
+    else:
+        col = 0
+    return col
+
 
 def ppm_color_matrix(hare_densities, puma_densities, landscape, width, height, hare_cols, puma_cols):
     max_hare_density=np.max(hare_densities)
@@ -60,18 +74,57 @@ def ppm_color_matrix(hare_densities, puma_densities, landscape, width, height, h
                 hare_cols[x-1,y-1]=single_color_point(max_hare_density, hare_densities, x, y)
                 puma_cols[x-1,y-1]=single_color_point(max_puma_density, puma_densities, x, y)
     return hare_cols, puma_cols
-    
 
-def single_color_point(max_density, densities, x, y):
-    if max_density != 0:
-        col=(densities[x,y]/max_density)*255  #color of hares 
+
+def density_generator(landscape, seed, width, height):
+    generated_density = landscape.astype(float).copy() # density of hares in the landscape
+    random.seed(seed)
+    for x in range(1,height+1):
+        for y in range(1,width+1):
+            if seed==0:
+                generated_density[x,y]=0
+            else:
+                if landscape[x,y]:
+                    generated_density[x,y]=random.uniform(0,5.0)
+                else:
+                    generated_density[x,y]=0
+    return generated_density
+
+
+def average_of_density(density, number_of_land_only):
+    if number_of_land_only != 0:
+        avarage = np.sum(density)/number_of_land_only  #calculate the average of dendity
     else:
-        col = 0
-    return col
+        avarage = 0
+    return avarage
 
 
-def sim():
+def averages_output(i, delta_t, hare_densities, puma_densities, number_of_land_only):  
+    average_of_hares = average_of_density(hare_densities, number_of_land_only)
+    average_of_pumas = average_of_density(puma_densities, number_of_land_only)
+    print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(i,i*delta_t,average_of_hares,average_of_pumas))
+    with open("averages.csv".format(i),"a") as f:
+        f.write("{},{},{},{}\n".format(i,i*delta_t,average_of_hares,average_of_pumas))
 
+
+def generate_ppm_file(i, landscape, width, height, hare_cols, puma_cols):
+    with open("map_{:04d}.ppm".format(i),"w") as f:
+        hdr="P3\n{} {}\n{}\n".format(width,height,255)
+        f.write(hdr)
+        for x in range(0,height):
+            for y in range(0,width):
+                if landscape[x+1,y+1]:
+                    f.write("{} {} {}\n".format(hare_cols[x,y],puma_cols[x,y],0))
+                else:
+                    f.write("{} {} {}\n".format(0,0,255))
+
+
+def swap_arrays(array1, array2):
+    # Swap arrays for next iteration.
+    return array2,array1
+
+
+def simulation():
     args = args_parser()
 
     birth_hares=args.birth_hares
@@ -92,8 +145,6 @@ def sim():
 
     number_of_land_only = count_land_only(landscape)
 
-    # Pre-calculate number of land neighbours of each land square.
-    neibs = num_of_land_neighbours(height_halo,width_halo,height,width,landscape)
 
     hare_densities = density_generator(landscape, hare_seed, width, height)
     puma_densities = density_generator(landscape, puma_seed, width, height)
@@ -109,12 +160,13 @@ def sim():
 
 
     # Create copies of initial maps and arrays for PPM file maps.
-    # Reuse these so we don't need to create new arrays going round the simulation loop.
     hs_nu=hare_densities.copy() 
     ps_nu=puma_densities.copy() 
     hcols=np.zeros((height,width),int) 
     pcols=np.zeros((height,width),int) # clour matrix
     
+    # Calculate number of land neighbours of each land square.
+    neibs = num_of_land_neighbours(height_halo,width_halo,height,width,landscape)
 
     total_time_steps = int(duration / delta_t)
     for i in range(0,total_time_steps):
@@ -155,55 +207,5 @@ def sim():
         hare_densities, hs_nu = swap_arrays(hare_densities, hs_nu)
         puma_densities, ps_nu = swap_arrays(puma_densities, ps_nu)
 
-
-
-
-
-
-def density_generator(landscape, seed, width, height):
-    generated_density = landscape.astype(float).copy() # density of hares in the landscape
-    random.seed(seed)
-    for x in range(1,height+1):
-        for y in range(1,width+1):
-            if seed==0:
-                generated_density[x,y]=0
-            else:
-                if landscape[x,y]:
-                    generated_density[x,y]=random.uniform(0,5.0)
-                else:
-                    generated_density[x,y]=0
-    return generated_density
-
-
-def average_of_density(density, number_of_land_only):
-    if number_of_land_only != 0:
-        avarage = np.sum(density)/number_of_land_only  #calculate the average of dendity
-    else:
-        avarage = 0
-    return avarage
-
-
-def swap_arrays(array1, array2):
-    return array2,array1
-
-def generate_ppm_file(i, landscape, width, height, hare_cols, puma_cols):
-    with open("map_{:04d}.ppm".format(i),"w") as f:
-        hdr="P3\n{} {}\n{}\n".format(width,height,255)
-        f.write(hdr)
-        for x in range(0,height):
-            for y in range(0,width):
-                if landscape[x+1,y+1]:
-                    f.write("{} {} {}\n".format(hare_cols[x,y],puma_cols[x,y],0))
-                else:
-                    f.write("{} {} {}\n".format(0,0,255))
-
-def averages_output(i, delta_t, hare_densities, puma_densities, number_of_land_only):  
-    average_of_hares = average_of_density(hare_densities, number_of_land_only)
-    average_of_pumas = average_of_density(puma_densities, number_of_land_only)
-    print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(i,i*delta_t,average_of_hares,average_of_pumas))
-    with open("averages.csv".format(i),"a") as f:
-        f.write("{},{},{},{}\n".format(i,i*delta_t,average_of_hares,average_of_pumas))
-
-
 if __name__ == "__main__":
-    sim()
+    simulation()
