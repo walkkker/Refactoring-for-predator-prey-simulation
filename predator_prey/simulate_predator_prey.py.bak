@@ -51,6 +51,25 @@ def num_of_land_neighbours(height_halo,width_halo,height,width,landscape):
                 + landscape[x,y+1]
     return land_neighbours
 
+def ppm_color_matrix(hare_densities, puma_densities, landscape, width, height, hare_cols, puma_cols):
+    max_hare_density=np.max(hare_densities)
+    max_puma_density=np.max(puma_densities)
+    for x in range(1,height+1):
+        for y in range(1,width+1):
+            if landscape[x,y]:
+                hare_cols[x-1,y-1]=single_color_point(max_hare_density, hare_densities, x, y)
+                puma_cols[x-1,y-1]=single_color_point(max_puma_density, puma_densities, x, y)
+    return hare_cols, puma_cols
+    
+
+def single_color_point(max_density, densities, x, y):
+    if max_density != 0:
+        col=(densities[x,y]/max_density)*255  #color of hares 
+    else:
+        col = 0
+    return col
+
+
 def sim():
 
     args = args_parser()
@@ -100,8 +119,6 @@ def sim():
     total_time_steps = int(duration / delta_t)
     for i in range(0,total_time_steps):
         if not i%time_step:
-            max_hare_density=np.max(hare_densities)
-            max_puma_density=np.max(puma_densities)
 
             average_of_hares = average_of_density(hare_densities, number_of_land_only)
             average_of_pumas = average_of_density(puma_densities, number_of_land_only)
@@ -109,30 +126,21 @@ def sim():
             print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(i,i*delta_t,average_of_hares,average_of_pumas))
             with open("averages.csv".format(i),"a") as f:
                 f.write("{},{},{},{}\n".format(i,i*delta_t,average_of_hares,average_of_pumas))
+            
+            #averages_output(i, delta_t, hare_densities, puma_densities, number_of_land_only) # output for both file and print
 
-            for x in range(1,height+1):
-                for y in range(1,width+1):
-                    if landscape[x,y]:
-                        if max_hare_density != 0:
-                            hcol=(hare_densities[x,y]/max_hare_density)*255  #color of hares 
-                        else:
-                            hcol = 0
-                        if max_puma_density != 0:
-                            pcol=(puma_densities[x,y]/max_puma_density)*255 #color of pumas
-                        else:
-                            pcol = 0
-                        hcols[x-1,y-1]=hcol
-                        pcols[x-1,y-1]=pcol
+            hcols, pcols = ppm_color_matrix(hare_densities, puma_densities, landscape, width, height, hcols, pcols)
 
-            with open("map_{:04d}.ppm".format(i),"w") as f:
-                hdr="P3\n{} {}\n{}\n".format(width,x,255)
+            '''with open("map_{:04d}.ppm".format(i),"w") as f:
+                hdr="P3\n{} {}\n{}\n".format(width,height,255)
                 f.write(hdr)
                 for x in range(0,height):
                     for y in range(0,width):
                         if landscape[x+1,y+1]:
                             f.write("{} {} {}\n".format(hcols[x,y],pcols[x,y],0))
                         else:
-                            f.write("{} {} {}\n".format(0,0,255))
+                            f.write("{} {} {}\n".format(0,0,255))'''
+            generate_ppm_file(i, landscape, width, height, hcols, pcols)
 
         for x in range(1,height+1):
             for y in range(1,width+1):
@@ -177,6 +185,25 @@ def average_of_density(density, number_of_land_only):
 
 def swap_arrays(array1, array2):
     return array2,array1
+
+def generate_ppm_file(i, landscape, width, height, hare_cols, puma_cols):
+    with open("map_{:04d}.ppm".format(i),"w") as f:
+        hdr="P3\n{} {}\n{}\n".format(width,height,255)
+        f.write(hdr)
+        for x in range(0,height):
+            for y in range(0,width):
+                if landscape[x+1,y+1]:
+                    f.write("{} {} {}\n".format(hare_cols[x,y],puma_cols[x,y],0))
+                else:
+                    f.write("{} {} {}\n".format(0,0,255))
+
+def averages_output(i, delta_t, hare_densities, puma_densities, number_of_land_only):  
+    average_of_hares = average_of_density(hare_densities, number_of_land_only)
+    average_of_pumas = average_of_density(puma_densities, number_of_land_only)
+    print("Averages. Timestep: {} Time (s): {} Hares: {} Pumas: {}".format(i,i*delta_t,average_of_hares,average_of_pumas))
+    with open("averages.csv".format(i),"a") as f:
+        f.write("{},{},{},{}\n".format(i,i*delta_t,average_of_hares,average_of_pumas))
+
 
 if __name__ == "__main__":
     sim()
