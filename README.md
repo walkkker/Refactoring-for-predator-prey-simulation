@@ -146,3 +146,37 @@ This file is plain-text so you can view it as you would any plain-text file e.g.
 ```console
 $ cat averages.csv
 ```
+
+---
+
+## Pytest 
+
+Run pytest and tell it to run all the tests in the file:
+
+On Cirrus, run:
+
+```console
+$ module load anaconda/python3
+
+$ pytest predator_prey/test/test_simulate_predator_prey.py
+```
+
+On DICE, run:
+
+```console
+$ pytest-3 predator_prey/test/test_simulate_predator_prey.py
+```
+
+You could also run pytest with no arguments and it will run all the test functions in all the test modules findable from the current directory£º
+
+Run, on Cirrus:
+
+```console
+$ pytest
+```
+
+Run, on DICE:
+
+```console
+$ pytest-3
+```
