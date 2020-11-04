@@ -167,7 +167,7 @@ On DICE, run:
 $ pytest-3 predator_prey/test/test_simulate_predator_prey.py
 ```
 
-You could also run pytest with no arguments and it will run all the test functions in all the test modules findable from the current directory£º
+You could also run pytest with no arguments and it will run all the test functions in all the test modules findable from the current directory:
 
 Run, on Cirrus:
 
