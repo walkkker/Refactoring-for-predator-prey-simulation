@@ -101,7 +101,7 @@ These files do not include the halo as the use of a halo is an implementation de
 These files are plain-text so you can view them as you would any plain-text file e.g.:
 
 ```console
-$ cat map<NNNN>.pgm
+$ cat map<NNNN>.ppm
 ```
 
 PPM files can be viewed graphically using ImageMagick commands as follows.
@@ -115,13 +115,13 @@ $ module load ImageMagick
 To view a PPM file, run:
 
 ```console
-$ display map<NNNN>.pgm
+$ display map<NNNN>.ppm
 ```
 
 To animate a series of PPM files:
 
 ```console
-$ animate map*.pgm
+$ animate map*.ppm
 ```
 
 For more information on the PPM file format, run `man ppm` or see [ppm](http://netpbm.sourceforge.net/doc/ppm.html).
