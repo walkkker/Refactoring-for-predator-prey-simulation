@@ -49,14 +49,14 @@ class SimulateTest(unittest.TestCase):
         width, height, width_halo, height_halo, landscape = simulate_predator_prey.landscape_generator("map.dat")
         seed = 1
         with self.assertRaises(IndexError):      
-            width = 12 #invald
+            width += 2 #invald
             simulate_predator_prey.density_generator(landscape, seed, width, height)
  
     def test_density_generator_invalid_height(self):
         width, height, width_halo, height_halo, landscape = simulate_predator_prey.landscape_generator("map.dat")
         seed = 1
         with self.assertRaises(IndexError):      
-            height = 22 #invald
+            height += 2 #invald
             simulate_predator_prey.density_generator(landscape, seed, width, height)
     
     def test_average_of_density(self):
@@ -88,7 +88,7 @@ class SimulateTest(unittest.TestCase):
         puma_densities = simulate_predator_prey.density_generator(landscape, 1, width, height)
         hare_cols=np.zeros((height,width),int) 
         puma_cols=np.zeros((height,width),int)
-        width = 12
+        width += 2
         with self.assertRaises(IndexError):
             simulate_predator_prey.ppm_color_matrix(hare_densities, puma_densities, landscape, width, height, hare_cols, puma_cols)
 
